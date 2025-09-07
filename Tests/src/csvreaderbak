@@ -1,0 +1,79 @@
+//
+// Created by alezito on 9/5/25.
+//
+
+#include "CSVReader.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+void CSVReader::LoadCSV() {
+
+    std::ifstream file(m_path);
+
+    if (!file.is_open()) {
+        std::cout << "Error al abrir CSV" << std::endl;
+    }
+
+    bool isFirstLine = true;
+    std::string line;
+    while (std::getline(file, line)) {
+        std::stringstream row(line);
+        std::string cell;
+        Serial rowItems;
+
+        unsigned int lineIndex = 0;
+
+        while (std::getline(row, cell, ',')) {
+            if (isFirstLine) {
+                isFirstLine = false;
+
+                m_columnIndexes[cell] = lineIndex;
+
+                lineIndex++;
+                continue;
+            }
+            std::cout << cell;
+            rowItems.push_back(stof(cell));
+        }
+
+        m_table.push_back(rowItems);
+        rowItems.clear();
+    }
+
+    file.close();
+    m_loaded = true;
+
+    for (auto row : m_table) {
+        std::string x = "";
+        for (auto cell : row) {
+            x += std::to_string(cell) + " ";
+        }
+        std::cout << x << std::endl;
+    }
+}
+
+int CSVReader::GetIndexByName(const std::string &columnName) const {
+    if (!m_loaded) {
+        std::cout << "Call LoadCSV() first" << std::endl;
+        return -1;
+    }
+
+    auto it = m_columnIndexes.find(columnName);
+    if (it != m_columnIndexes.end()) {
+        return it -> second;
+    } else {
+        std::cout << "Not found" << std::endl;
+        return -1;
+    }
+}
+
+Serial CSVReader::GetColumn(unsigned int columnLoc) const {
+    Serial column;
+    for (const auto& row : m_table) {
+        if (columnLoc < row.size()) {
+            column.push_back(row[columnLoc]);
+        }
+    }
+    return column;
+}
